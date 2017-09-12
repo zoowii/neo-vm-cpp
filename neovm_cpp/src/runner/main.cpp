@@ -78,12 +78,12 @@ bool CorePrint(neo::vm::ExecutionEngine *engine)
 	std::cout << "core_print api doing" << std::endl;
 	auto &eval_stack = *(engine->evaluation_stack());
 	auto item = neo::vm::Helper::pop(eval_stack);
-	if (item->type() == neo::vm::StackItemType::BYTE_ARRAY)
+	if (item->type() == neo::vm::StackItemType::SIT_BYTE_ARRAY)
 	{
 		auto str = item->GetString();
 		std::cout << str << std::endl;
 	}
-	else if (item->type() == StackItemType::INTEGER)
+	else if (item->type() == StackItemType::SIT_INTEGER)
 	{
 		auto num = item->GetBigInteger();
 		std::cout << num << std::endl;
@@ -141,51 +141,46 @@ int main(int argc, char **argv)
 
 	auto engine = std::make_shared<neo::vm::ExecutionEngine>(&script_container, &crypto, &script_table, &interop_service);
 	engine->open_debug_mode();
+	engine->set_neo_mode(false);
 
 	for (auto i = 1; i < argc; i++)
 	{
 		std::string filepath(argv[i]);
 		auto bytecode_data = load_bytecode_file(filepath);
 
-		// engine->LoadScript(script_container->get_message(), false);
+		script_table.put_script("demo_script", bytecode_data);
+
 		engine->evaluation_stack()->clear();
 
-		engine->load_script(bytecode_data, Helper::string_content_to_chars("demo_script"), false);
 
+		int mode = 1;
+		
 		// load args script
-		neo::vm::ScriptBuilder sb;
 
 		std::vector<StackItem*> script_args;
-		script_args.push_back(StackItem::to_stack_item(engine.get(), string_to_bytes("demoAddress")));
+	
+		std::vector<StackItem*> second_arg_content;
+		second_arg_content.push_back(StackItem::to_stack_item(engine.get(), string_to_bytes("demoAddress")));
+		auto second_arg = StackItem::to_stack_item(engine.get(), second_arg_content); // 第二个参数 args
+		auto first_arg = StackItem::to_stack_item(engine.get(), "balanceOf");
+		script_args.push_back(first_arg);
+		script_args.push_back(second_arg);
 
-		engine->evaluation_stack()->push(StackItem::to_stack_item(engine.get(), script_args)); // 第二个参数 args
-		sb.emit_push("balanceOf"); // 对应形参1, balanceOf, name
-		auto sbData = sb.to_char_array();
-		
-		engine->load_script(sbData, Helper::string_content_to_chars("args_address"), false);
-	}
-	try 
-	{
-		engine->execute();
-	}
-	catch (std::exception &e)
-	{
-		std::cerr << "error: " << e.what() << std::endl;
-	}
-	std::cout << "vm execute end with status " << engine->state() << std::endl;
-	if (engine->evaluation_stack()->size() > 0)
-	{
-		auto result_item = engine->evaluation_stack()->peek();
-		if (result_item->type() == neo::vm::StackItemType::BYTE_ARRAY)
+		try
 		{
-			auto result_str = result_item->GetString();
-			std::cout << "result: " << result_str << std::endl;
+			auto result_item = engine->execute_script("demo_script", script_args, true);
+			std::cout << "vm execute end with status " << engine->state() << std::endl;
+			if (result_item)
+			{
+				auto result_str = result_item->GetString();
+				std::cout << "result: " << result_str << std::endl;
+			}
 		}
-		else if (result_item->type() == StackItemType::INTEGER)
+		catch (std::exception &e)
 		{
-			auto result_num = result_item->GetBigInteger();
-			std::cout << "result: " << result_num << std::endl;
+			std::cerr << "error: " << e.what() << std::endl;
 		}
 	}
+	
 	return 0;
 }

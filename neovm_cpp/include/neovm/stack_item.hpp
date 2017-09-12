@@ -16,15 +16,15 @@ namespace neo
 
 		enum StackItemType
 		{
-			INTEGER = 0,
-			BOOLEAN = 1,
-			BYTE_ARRAY = 2,
-			ARRAY = 3,
-			STRUCT = 4,
+			SIT_INTEGER = 0,
+			SIT_BOOLEAN = 1,
+			SIT_BYTE_ARRAY = 2,
+			SIT_ARRAY = 3,
+			SIT_STRUCT = 4,
 
-			USERDATA = 5,
+			SIT_USERDATA = 5,
 
-			INTEROP_INTERFACE = 10
+			SIT_INTEROP_INTERFACE = 10
 		};
 
 		class StackItem
@@ -49,7 +49,7 @@ namespace neo
 				return _type;
 			}
 
-			virtual BigInteger GetBigInteger();
+			virtual VMBigInteger GetBigInteger();
 
 			virtual bool GetBoolean();
 
@@ -68,7 +68,7 @@ namespace neo
 
 			static StackItem *to_stack_item_from_bool(ExecutionEngine *engine, bool value);
 
-			static StackItem *to_stack_item(ExecutionEngine *engine, BigInteger num);
+			static StackItem *to_stack_item(ExecutionEngine *engine, VMBigInteger num);
 
 			static StackItem *to_stack_item(ExecutionEngine *engine, std::vector<StackItem*> &items);
 

@@ -34,7 +34,7 @@ namespace neo
 
 			byte ReadByte();
 
-			LInteger ReadVarInt64(LInteger max);
+			VMLInteger ReadVarInt64(VMLInteger max);
 
 			uint16_t ReadUInt16();
 
@@ -46,7 +46,7 @@ namespace neo
 
 			uint64_t ReadUInt64();
 
-			LInteger ReadVarInt(unsigned long max = -1);
+			VMLInteger ReadVarInt(unsigned long max = -1);
 
 			void Seek(int offset, int begin);
 
@@ -66,6 +66,8 @@ namespace neo
 			static std::vector<byte> string_content_to_bytes(std::string str);
 
 			static std::vector<byte> string_to_bytes(std::string str);
+
+			static std::vector<byte> chars_to_bytes(std::vector<char> data);
 
 			static std::string ReadVarString(BinaryReader *reader);
 
@@ -105,9 +107,9 @@ namespace neo
 
 			static bool enum_has_flag(int enum_value, int flag);
 
-			static std::vector<char> big_integer_to_chars(BigInteger num);
+			static std::vector<char> big_integer_to_chars(VMBigInteger num);
 
-			static std::vector<byte> big_integer_to_bytes(BigInteger num);
+			static std::vector<byte> big_integer_to_bytes(VMBigInteger num);
 
 			static std::vector<byte> int16_to_bytes(int16_t num);
 

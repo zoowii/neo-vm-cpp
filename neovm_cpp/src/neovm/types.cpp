@@ -26,7 +26,7 @@ namespace neo
 			return &_array;
 		}
 
-		BigInteger Array::GetBigInteger()
+		VMBigInteger Array::GetBigInteger()
 		{
 			throw NeoVmException("not supported operation");
 		}
@@ -53,7 +53,7 @@ namespace neo
 				return _value == b->_value;
 		}
 
-		BigInteger Boolean::GetBigInteger()
+		VMBigInteger Boolean::GetBigInteger()
 		{
 			return _value ? 1 : 0;
 		}
@@ -61,6 +61,11 @@ namespace neo
 		bool Boolean::GetBoolean()
 		{
 			return _value;
+		}
+
+		std::string Boolean::GetString()
+		{
+			return _value ? "true" : "false";
 		}
 
 		std::vector<char> Boolean::GetByteArray()
@@ -93,7 +98,7 @@ namespace neo
 				return _value == i->_value;
 		}
 
-		BigInteger Integer::GetBigInteger()
+		VMBigInteger Integer::GetBigInteger()
 		{
 			return _value;
 		}
@@ -101,6 +106,11 @@ namespace neo
 		bool Integer::GetBoolean()
 		{
 			return _value != 0;
+		}
+
+		std::string Integer::GetString()
+		{
+			return std::to_string(_value);
 		}
 
 		std::vector<char> Integer::GetByteArray()
@@ -147,7 +157,7 @@ namespace neo
 			return _value == b->_value;
 		}
 
-		BigInteger Userdata::GetBigInteger()
+		VMBigInteger Userdata::GetBigInteger()
 		{
 			throw NeoVmException("Can't parse userdata to integer");
 		}
@@ -162,9 +172,14 @@ namespace neo
 			return 1;
 		}
 
+		std::string Userdata::GetString()
+		{
+			return "<userdata>";
+		}
+
 		std::vector<char> Userdata::GetByteArray()
 		{
-			std::string address_str("address"); // 为了使得每次计算结果一致，用统一的值
+			std::string address_str("<userdata>"); // 为了使得每次计算结果一致，用统一的值
 			std::vector<char> addr_chars(address_str.length() + 1);
 			memcpy(addr_chars.data(), address_str.c_str(), sizeof(char) * (address_str.length() + 1));
 			addr_chars[address_str.length()] = '\0';
@@ -174,41 +189,41 @@ namespace neo
 		Array::Array(ExecutionEngine *engine, std::vector<StackItem*> value)
 		{
 			this->_array = value;
-			_type = StackItemType::ARRAY;
+			_type = StackItemType::SIT_ARRAY;
 			engine->add_stack_item_to_pool(this);
 		}
 
 		Boolean::Boolean(ExecutionEngine *engine, bool value)
 		{
 			this->_value = value;
-			_type = StackItemType::BOOLEAN;
+			_type = StackItemType::SIT_BOOLEAN;
 			engine->add_stack_item_to_pool(this);
 		}
 
 		Userdata::Userdata(ExecutionEngine *engine, void *value)
 		{
 			this->_value = value;
-			_type = StackItemType::USERDATA;
+			_type = StackItemType::SIT_USERDATA;
 			engine->add_stack_item_to_pool(this);
 		}
 
 		ByteArray::ByteArray(ExecutionEngine *engine, std::vector<char> value)
 		{
 			this->_value = value;
-			_type = StackItemType::BYTE_ARRAY;
+			_type = StackItemType::SIT_BYTE_ARRAY;
 			engine->add_stack_item_to_pool(this);
 		}
 
-		Integer::Integer(ExecutionEngine *engine, BigInteger value)
+		Integer::Integer(ExecutionEngine *engine, VMBigInteger value)
 		{
 			this->_value = value;
-			_type = StackItemType::INTEGER;
+			_type = StackItemType::SIT_INTEGER;
 			engine->add_stack_item_to_pool(this);
 		}
 
 		Struct::Struct(ExecutionEngine *engine, std::vector<StackItem*> value) : Array(engine, value)
 		{
-			_type = StackItemType::STRUCT;
+			_type = StackItemType::SIT_STRUCT;
 			engine->add_stack_item_to_pool(this);
 		}
 

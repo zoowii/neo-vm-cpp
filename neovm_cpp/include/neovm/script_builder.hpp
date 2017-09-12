@@ -24,11 +24,11 @@ namespace neo
 
 			ScriptBuilder *emit(OpCode op, std::vector<byte> arg = {});
 
-			ScriptBuilder *emit_app_call(std::vector<byte> scriptHash, bool useTailCall = false);
+			ScriptBuilder *emit_app_call(std::vector<char> script_id, bool useTailCall = false);
 
 			ScriptBuilder *emit_jump(OpCode op, int16_t offset);
 
-			ScriptBuilder *emit_push(BigInteger number);
+			ScriptBuilder *emit_push(VMBigInteger number);
 
 			ScriptBuilder *emit_push(bool data);
 

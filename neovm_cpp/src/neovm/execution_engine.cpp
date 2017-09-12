@@ -3,6 +3,7 @@
 #include <neovm/types.hpp>
 #include <neovm/stack_item.hpp>
 #include <neovm/exceptions.hpp>
+#include <neovm/script_builder.hpp>
 
 #include <math.h>
 
@@ -21,6 +22,7 @@ namespace neo
 			_debug_mode = false;
 			_gas_limit = -1;
 			_gas_used = 0;
+			_is_neo_mode = true; // 默认是neo vm模式
 		}
 
 		void ExecutionEngine::add_break_point(uint64_t position)
@@ -83,6 +85,15 @@ namespace neo
 		void ExecutionEngine::add_gas_used(int64_t delta_used)
 		{
 			_gas_used += delta_used;
+		}
+
+		void ExecutionEngine::set_neo_mode(bool neo_mode)
+		{
+			this->_is_neo_mode = neo_mode;
+		}
+		bool ExecutionEngine::is_neo_mode() const
+		{
+			return _is_neo_mode;
 		}
 
 		void ExecutionEngine::stop()
@@ -242,7 +253,7 @@ namespace neo
 			_global_env[name] = value;
 		}
 
-		void ExecutionEngine::register_string_global_variabble(std::string name, std::string value)
+		void ExecutionEngine::register_string_global_variable(std::string name, std::string value)
 		{
 			_global_env[name] = StackItem::to_stack_item(this, value);
 		}
@@ -376,7 +387,16 @@ namespace neo
 						union_change_state(VMState::FAULT);
 						return;
 					}
-					auto script_id = Helper::bytes_to_string(context->op_reader()->ReadBytes(20)); // TODO: maybe need change to read string directly as script_id
+					std::string script_id;
+					if (is_neo_mode())
+					{
+						script_id = Helper::bytes_to_string(context->op_reader()->ReadBytes(20));
+					}
+					else
+					{
+						uint32_t script_id_length = context->op_reader()->ReadUInt32();
+						script_id = Helper::bytes_to_string(context->op_reader()->ReadBytes(script_id_length));
+					}
 					auto script = _table->get_script(script_id);
 					if (script.size() < 1)
 					{
@@ -597,28 +617,28 @@ namespace neo
 				// Bitwise logic
 				case OpCode::INVERT:
 				{
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, ~x));
 				}
 				break;
 				case OpCode::BIT_AND:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 & x2));
 				}
 				break;
 				case OpCode::BIT_OR:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 | x2));
 				}
 				break;
 				case OpCode::BIT_XOR:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 ^ x2));
 				}
 				break;
@@ -633,32 +653,32 @@ namespace neo
 				// Numeric
 				case OpCode::INC:
 				{
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x + 1));
 				}
 				break;
 				case OpCode::DEC:
 				{
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x - 1));
 				}
 				break;
 				case OpCode::SIGN:
 				{
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					// FIXME: 改成 _evaluation_stack.push_back(x.Sign);
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x));
 				}
 				break;
 				case OpCode::NEGATE:
 				{
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, -x));
 				}
 				break;
 				case OpCode::ABS:
 				{
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, std::abs(x)));
 				}
 				break;
@@ -670,56 +690,56 @@ namespace neo
 				break;
 				case OpCode::NZ:
 				{
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x != 0));
 				}
 				break;
 				case OpCode::ADD:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 + x2));
 				}
 				break;
 				case OpCode::SUB:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 - x2));
 				}
 				break;
 				case OpCode::MUL:
 				{
-					BigInteger x2 =_evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 =_evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 * x2));
 				}
 				break;
 				case OpCode::DIV:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 / x2));
 				}
 				break;
 				case OpCode::MOD:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 % x2));
 				}
 				break;
 				case OpCode::SHL:
 				{
 					int n = (int)_evaluation_stack.pop()->GetBigInteger();
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x << n));
 				}
 				break;
 				case OpCode::SHR:
 				{
 					int n = (int)_evaluation_stack.pop()->GetBigInteger();
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x >> n));
 				}
 				break;
@@ -739,65 +759,65 @@ namespace neo
 				break;
 				case OpCode::NUMEQUAL:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 == x2));
 				}
 				break;
 				case OpCode::NUMNOTEQUAL:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 != x2));
 				}
 				break;
 				case OpCode::LT:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 < x2));
 				}
 				break;
 				case OpCode::GT:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 > x2));
 				}
 				break;
 				case OpCode::LTE:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 <= x2));
 				}
 				break;
 				case OpCode::GTE:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 >= x2));
 				}
 				break;
 				case OpCode::MIN:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 < x2 ? x1 : x2));
 				}
 				break;
 				case OpCode::MAX:
 				{
-					BigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 < x2 ? x2 : x1));
 				}
 				break;
 				case OpCode::WITHIN:
 				{
-					BigInteger b = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger a = _evaluation_stack.pop()->GetBigInteger();
-					BigInteger x = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger b = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger a = _evaluation_stack.pop()->GetBigInteger();
+					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, a <= x && x < b));
 				}
 				break;
@@ -1018,6 +1038,43 @@ namespace neo
 				if (current_context()->break_points()->find((uint64_t)current_context()->get_instruction_pointer()) != current_context()->break_points()->end())
 					union_change_state(VMState::BREAK);
 			}
+		}
+
+		StackItem* ExecutionEngine::execute_script(std::string script_id, std::vector<StackItem*> args, bool has_return)
+		{
+			return execute_script(Helper::string_content_to_chars(script_id), args, has_return);
+		}
+
+		StackItem* ExecutionEngine::execute_script(std::vector<char> script_id, std::vector<StackItem*> args, bool has_return)
+		{
+			// load args to evaluation stack
+			for (auto i = args.rbegin(); i != args.rend(); i++)
+			{
+				this->evaluation_stack()->push(*i);
+			}
+			neo::vm::ScriptBuilder sb;
+			std::vector<char> app_call_args;
+			if (is_neo_mode())
+			{
+				app_call_args = script_id;
+			}
+			else
+			{
+				app_call_args = std::vector<char>(4 + script_id.size());
+				memcpy(app_call_args.data(), Helper::int32_to_bytes(script_id.size()).data(), 4);
+				memcpy(app_call_args.data() + 4, script_id.data(), script_id.size() * sizeof(char));
+			}
+			sb.emit_app_call(app_call_args, false);
+			auto sbData = sb.to_char_array();
+
+			this->load_script(sbData, Helper::string_content_to_chars("script_loader"), false);
+			this->execute();
+			if (has_return && this->evaluation_stack()->size() > 0)
+			{
+				return this->evaluation_stack()->pop();
+			}
+			else
+				return nullptr;
 		}
 
 	}

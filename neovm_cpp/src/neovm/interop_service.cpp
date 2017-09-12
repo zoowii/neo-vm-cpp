@@ -60,7 +60,7 @@ namespace neo
 		{
 			auto value = engine->evaluation_stack()->pop();
 			auto name = engine->evaluation_stack()->pop();
-			if (name->type() != StackItemType::BYTE_ARRAY)
+			if (name->type() != StackItemType::SIT_BYTE_ARRAY)
 			{
 				throw NeoVmException("global variable name must be string");
 			}

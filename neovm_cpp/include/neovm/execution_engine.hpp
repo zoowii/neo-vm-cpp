@@ -54,6 +54,8 @@ namespace neo
 			int64_t _gas_limit;
 			int64_t _gas_used;
 
+			bool _is_neo_mode; // 是否neo vm的模式，neo vm模式下和非neo vm模式一些功能有去吧
+
 			std::map<std::string, StackItem*> _global_env; // 全局变量表
 			std::map<std::string, StackItem*> _container_values; // engine可以被使用者与一些值关联起来，这些值不是全局变量
 		public:
@@ -74,6 +76,9 @@ namespace neo
 			void set_no_gas_limit();
 			void set_gas_used(int64_t gas_used);
 			void add_gas_used(int64_t delta_used);
+
+			void set_neo_mode(bool neo_mode);
+			bool is_neo_mode() const;
 
 			void stop();
 
@@ -102,19 +107,13 @@ namespace neo
 			ErrorCode exit_code() const;
 
 			void register_global_variable(std::string name, StackItem *value);
-			void register_string_global_variabble(std::string name, std::string value);
+			void register_string_global_variable(std::string name, std::string value);
 
 			StackItem *get_global_variable_value(std::string name);
 
 			void set_container_value(std::string name, StackItem *value);
 			StackItem *get_container_value(std::string name);
 
-		private:
-			void ExecuteOp(OpCode opcode, ExecutionContext *context);
-
-			void union_change_state(VMState other);
-
-		public:
 			void load_script(std::vector<char> script, std::vector<char> script_id, bool push_only);
 
 			bool remove_break_point(uint64_t position);
@@ -124,6 +123,14 @@ namespace neo
 			void step_out();
 
 			void step_over();
+
+			StackItem *execute_script(std::string script_id, std::vector<StackItem*> args, bool has_return = false);
+			StackItem *execute_script(std::vector<char> script_id, std::vector<StackItem*> args, bool has_return=false);
+
+		private:
+			void ExecuteOp(OpCode opcode, ExecutionContext *context);
+
+			void union_change_state(VMState other);
 
 		};
 

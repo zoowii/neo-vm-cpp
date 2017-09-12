@@ -5,9 +5,9 @@ namespace neo
 {
 	namespace vm
 	{
-		typedef long long BigInteger;
+		typedef long long VMBigInteger;
 
-		typedef long long LInteger; // 虚拟机中使用的整数类型
+		typedef long long VMLInteger; // 虚拟机中使用的整数类型
 
 		typedef unsigned char byte;
 	}

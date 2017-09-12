@@ -31,11 +31,11 @@ namespace neo
 			return this;
 		}
 
-		ScriptBuilder* ScriptBuilder::emit_app_call(std::vector<byte> scriptHash, bool useTailCall)
+		ScriptBuilder* ScriptBuilder::emit_app_call(std::vector<char> script_id, bool useTailCall)
 		{
-			if (scriptHash.size() < 20)
+			if (script_id.size() < 1)
 				throw NeoVmException("argument exception");
-			return emit(useTailCall ? OpCode::TAILCALL : OpCode::APPCALL, scriptHash);
+			return emit(useTailCall ? OpCode::TAILCALL : OpCode::APPCALL, Helper::chars_to_bytes(script_id));
 		}
 
 		ScriptBuilder* ScriptBuilder::emit_jump(OpCode op, int16_t offset)
@@ -45,7 +45,7 @@ namespace neo
 			return emit(op, Helper::int16_to_bytes(offset));
 		}
 
-		ScriptBuilder* ScriptBuilder::emit_push(BigInteger number)
+		ScriptBuilder* ScriptBuilder::emit_push(VMBigInteger number)
 		{
 			if (number == -1) return emit(OpCode::PUSHM1);
 			if (number == 0) return emit(OpCode::PUSH0);

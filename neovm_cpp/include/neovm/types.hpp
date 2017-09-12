@@ -25,7 +25,7 @@ namespace neo
 
 			virtual std::vector<StackItem*> *GetArray();
 
-			virtual BigInteger GetBigInteger();
+			virtual VMBigInteger GetBigInteger();
 
 			virtual bool GetBoolean();
 
@@ -45,9 +45,11 @@ namespace neo
 
 			virtual bool Equals(StackItem *other);
 
-			virtual BigInteger GetBigInteger();
+			virtual VMBigInteger GetBigInteger();
 
 			virtual bool GetBoolean();
+
+			virtual std::string GetString();
 
 			virtual std::vector<char> GetByteArray();
 		};
@@ -68,16 +70,18 @@ namespace neo
 		class Integer : public StackItem
 		{
 		private:
-			BigInteger _value;
+			VMBigInteger _value;
 
 		public:
-			Integer(ExecutionEngine *engine, BigInteger value);
+			Integer(ExecutionEngine *engine, VMBigInteger value);
 
 			virtual bool Equals(StackItem *other);
 
-			virtual BigInteger GetBigInteger();
+			virtual VMBigInteger GetBigInteger();
 
 			virtual bool GetBoolean();
+
+			virtual std::string GetString();
 
 			virtual std::vector<char> GetByteArray();
 		};
@@ -105,11 +109,13 @@ namespace neo
 
 			inline virtual bool IsUserdata() const { return true; }
 
-			virtual BigInteger GetBigInteger();
+			virtual VMBigInteger GetBigInteger();
 
 			virtual bool GetBoolean();
 
 			virtual void *get_userdata_address();
+
+			virtual std::string GetString();
 
 			virtual std::vector<char> GetByteArray();
 		};

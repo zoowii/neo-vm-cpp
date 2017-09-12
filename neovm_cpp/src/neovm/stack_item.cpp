@@ -7,7 +7,7 @@ namespace neo
 {
 	namespace vm
 	{
-		BigInteger StackItem::GetBigInteger()
+		VMBigInteger StackItem::GetBigInteger()
 		{
 			// big endien
 			auto bytes = GetByteArray();
@@ -15,7 +15,7 @@ namespace neo
 			{
 				throw NeoVmException("too long bytes to parse to BigInteger");
 			}
-			BigInteger value = 0;
+			VMBigInteger value = 0;
 			for (size_t i = 0; i < bytes.size(); i++)
 			{
 				value += (byte)(bytes[i]) << (8 * (bytes.size() - i - 1));
@@ -68,7 +68,7 @@ namespace neo
 			return new Boolean(engine, value);
 		}
 
-		StackItem *StackItem::to_stack_item(ExecutionEngine *engine, BigInteger num)
+		StackItem *StackItem::to_stack_item(ExecutionEngine *engine, VMBigInteger num)
 		{
 			return new Integer(engine, num);
 		}

@@ -46,12 +46,12 @@ namespace neo
 			return ReadUBytes(1)[0];
 		}
 
-		LInteger BinaryReader::ReadVarInt64(LInteger max)
+		VMLInteger BinaryReader::ReadVarInt64(VMLInteger max)
 		{
 			// little endien
 			auto bytes = ReadUBytes(8);
-			LInteger result = ((LInteger)bytes[7] << 56) + ((LInteger)bytes[6] << 48) + ((LInteger)bytes[5] << 40) + ((LInteger)bytes[4] << 32)
-				+ ((LInteger)bytes[3] << 24) + ((LInteger)bytes[2] << 16) + ((LInteger)bytes[1] << 8) + (LInteger)bytes[0];
+			VMLInteger result = ((VMLInteger)bytes[7] << 56) + ((VMLInteger)bytes[6] << 48) + ((VMLInteger)bytes[5] << 40) + ((VMLInteger)bytes[4] << 32)
+				+ ((VMLInteger)bytes[3] << 24) + ((VMLInteger)bytes[2] << 16) + ((VMLInteger)bytes[1] << 8) + (VMLInteger)bytes[0];
 			return result;
 		}
 
@@ -92,10 +92,10 @@ namespace neo
 			return result;
 		}
 
-		LInteger BinaryReader::ReadVarInt(unsigned long max)
+		VMLInteger BinaryReader::ReadVarInt(unsigned long max)
 		{
 			char fb = ReadByte();
-			LInteger value;
+			VMLInteger value;
 			if (fb == 0xFD)
 				value = ReadUInt16();
 			else if (fb == 0xFE)
@@ -156,6 +156,13 @@ namespace neo
 			return data;
 		}
 
+		std::vector<byte> Helper::chars_to_bytes(std::vector<char> data)
+		{
+			std::vector<byte> result(data.size());
+			memcpy(result.data(), data.data(), sizeof(char) * data.size());
+			return result;
+		}
+
 		std::vector<byte> Helper::string_to_bytes(std::string str)
 		{
 			std::vector<byte> data(str.size());
@@ -212,35 +219,39 @@ namespace neo
 			return (enum_value | flag) == enum_value;
 		}
 
-		std::vector<char> Helper::big_integer_to_chars(BigInteger num)
+		std::vector<char> Helper::big_integer_to_chars(VMBigInteger num)
 		{
+			// little endian
 			std::vector<char> array(8);
 			for (int i = 0; i < 8; i++)
-				array[7 - i] = (char) (num >> (i * 8));
+				array[i] = (char) (num >> (i * 8));
 			return array;
 		}
 
-		std::vector<byte> Helper::big_integer_to_bytes(BigInteger num)
+		std::vector<byte> Helper::big_integer_to_bytes(VMBigInteger num)
 		{
+			// little endian
 			std::vector<byte> array(8);
 			for (int i = 0; i < 8; i++)
-				array[7 - i] = (byte) (num >> (i * 8));
+				array[i] = (byte) (num >> (i * 8));
 			return array;
 		}
 
 		std::vector<byte> Helper::int16_to_bytes(int16_t num)
 		{
+			// little endian
 			std::vector<byte> array(2);
 			for (int i = 0; i < 2; i++)
-				array[1 - i] = (byte)(num >> (i * 8));
+				array[i] = (byte)(num >> (i * 8));
 			return array;
 		}
 
 		std::vector<byte> Helper::int32_to_bytes(int32_t num)
 		{
+			// little endian
 			std::vector<byte> array(4);
 			for (int i = 0; i < 4; i++)
-				array[3 - i] = (byte)(num >> (i * 8));
+				array[i] = (byte)(num >> (i * 8));
 			return array;
 		}
 
