@@ -19,6 +19,7 @@ namespace neo
 			SIMPLE_ERROR = 1,
 			MEMORY_ERROR = 2,
 			OVER_GAS_LIMIT = 3,
+			UNKNOWN_INSTRUCTION_OP = 4,
 
 			UNKNOWN_ERROR = 100
 		};
@@ -39,6 +40,11 @@ namespace neo
 				_error_msg = other._error_msg;
 			}
 			inline NeoVmException(const char *msg, ErrorCode code=ErrorCode::SIMPLE_ERROR)
+			{
+				_code = code;
+				_error_msg = msg;
+			}
+			inline NeoVmException(std::string &msg, ErrorCode code = ErrorCode::SIMPLE_ERROR)
 			{
 				_code = code;
 				_error_msg = msg;

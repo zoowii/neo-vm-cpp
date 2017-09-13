@@ -1,7 +1,7 @@
 #ifndef NEOVM_HELPER_HPP
 #define NEOVM_HELPER_HPP
 
-#include "config.hpp"
+#include <neovm/config.hpp>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -30,9 +30,9 @@ namespace neo
 
 			std::vector<char> ReadBytes(size_t size);
 
-			std::vector<byte> ReadUBytes(size_t size);
+			std::vector<VMByte> ReadUBytes(size_t size);
 
-			byte ReadByte();
+			VMByte ReadByte();
 
 			VMLInteger ReadVarInt64(VMLInteger max);
 
@@ -63,11 +63,11 @@ namespace neo
 
 			static std::vector<char> string_content_to_chars(std::string str);
 
-			static std::vector<byte> string_content_to_bytes(std::string str);
+			static std::vector<VMByte> string_content_to_bytes(std::string str);
 
-			static std::vector<byte> string_to_bytes(std::string str);
+			static std::vector<VMByte> string_to_bytes(std::string str);
 
-			static std::vector<byte> chars_to_bytes(std::vector<char> data);
+			static std::vector<VMByte> chars_to_bytes(std::vector<char> data);
 
 			static std::string ReadVarString(BinaryReader *reader);
 
@@ -109,11 +109,16 @@ namespace neo
 
 			static std::vector<char> big_integer_to_chars(VMBigInteger num);
 
-			static std::vector<byte> big_integer_to_bytes(VMBigInteger num);
+			static std::vector<VMByte> big_integer_to_bytes(VMBigInteger num);
 
-			static std::vector<byte> int16_to_bytes(int16_t num);
+			static std::vector<VMByte> int16_to_bytes(int16_t num);
 
-			static std::vector<byte> int32_to_bytes(int32_t num);
+			static std::vector<VMByte> int32_to_bytes(int32_t num);
+
+			/**
+			 * 对字符串转换成字面量，带有反转义
+			 */
+			static std::string quote_string(std::string source);
 
 			template <typename T>
 			static T peek(std::vector<T> &col, size_t index=0)

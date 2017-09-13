@@ -13,7 +13,7 @@ namespace neo
 		class ScriptBuilder
 		{
 		private:
-			std::vector<byte> _ms;
+			std::vector<VMByte> _ms;
 			size_t _position;
 		public:
 			size_t Offset() const;
@@ -22,7 +22,7 @@ namespace neo
 
 			virtual ~ScriptBuilder();
 
-			ScriptBuilder *emit(OpCode op, std::vector<byte> arg = {});
+			ScriptBuilder *emit(OpCode op, std::vector<VMByte> arg = {});
 
 			ScriptBuilder *emit_app_call(std::vector<char> script_id, bool useTailCall = false);
 
@@ -36,11 +36,11 @@ namespace neo
 
 			ScriptBuilder *emit_push_string(std::string str);
 
-			ScriptBuilder *emit_push(std::vector<byte> data);
+			ScriptBuilder *emit_push(std::vector<VMByte> data);
 
 			ScriptBuilder *emit_sys_call(std::string api);
 
-			std::vector<byte> to_array();
+			std::vector<VMByte> to_array();
 
 			std::vector<char> to_char_array();
 		};

@@ -1,6 +1,8 @@
 #include <neovm/helper.hpp>
 #include <neovm/exceptions.hpp>
 
+#include <sstream>
+
 namespace neo
 {
 	namespace vm
@@ -29,19 +31,19 @@ namespace neo
 			return result;
 		}
 
-		std::vector<byte> BinaryReader::ReadUBytes(size_t size)
+		std::vector<VMByte> BinaryReader::ReadUBytes(size_t size)
 		{
 			if (size + _position > _data.size())
 			{
 				throw NeoVmException("not enough binary data to read");
 			}
-			std::vector<byte> result(size);
-			memcpy(result.data(), _data.data() + _position, size * sizeof(byte));
+			std::vector<VMByte> result(size);
+			memcpy(result.data(), _data.data() + _position, size * sizeof(VMByte));
 			_position += size;
 			return result;
 		}
 
-		byte BinaryReader::ReadByte()
+		VMByte BinaryReader::ReadByte()
 		{
 			return ReadUBytes(1)[0];
 		}
@@ -149,28 +151,28 @@ namespace neo
 			return data;
 		}
 
-		std::vector<byte> Helper::string_content_to_bytes(std::string str)
+		std::vector<VMByte> Helper::string_content_to_bytes(std::string str)
 		{
-			std::vector<byte> data(str.size());
+			std::vector<VMByte> data(str.size());
 			memcpy(data.data(), str.c_str(), str.size() * sizeof(char));
 			return data;
 		}
 
-		std::vector<byte> Helper::chars_to_bytes(std::vector<char> data)
+		std::vector<VMByte> Helper::chars_to_bytes(std::vector<char> data)
 		{
-			std::vector<byte> result(data.size());
+			std::vector<VMByte> result(data.size());
 			memcpy(result.data(), data.data(), sizeof(char) * data.size());
 			return result;
 		}
 
-		std::vector<byte> Helper::string_to_bytes(std::string str)
+		std::vector<VMByte> Helper::string_to_bytes(std::string str)
 		{
-			std::vector<byte> data(str.size());
+			std::vector<VMByte> data(str.size());
 			memcpy(data.data(), str.c_str(), str.size() * sizeof(char));
-			std::vector<byte> result;
+			std::vector<VMByte> result;
 			if (data.size() < 0x100)
 			{
-				result.push_back((byte)data.size());
+				result.push_back((VMByte)data.size());
 				for (const auto b : data)
 				{
 					result.push_back(b);
@@ -228,33 +230,72 @@ namespace neo
 			return array;
 		}
 
-		std::vector<byte> Helper::big_integer_to_bytes(VMBigInteger num)
+		std::vector<VMByte> Helper::big_integer_to_bytes(VMBigInteger num)
 		{
 			// little endian
-			std::vector<byte> array(8);
+			std::vector<VMByte> array(8);
 			for (int i = 0; i < 8; i++)
-				array[i] = (byte) (num >> (i * 8));
+				array[i] = (VMByte) (num >> (i * 8));
 			return array;
 		}
 
-		std::vector<byte> Helper::int16_to_bytes(int16_t num)
+		std::vector<VMByte> Helper::int16_to_bytes(int16_t num)
 		{
 			// little endian
-			std::vector<byte> array(2);
+			std::vector<VMByte> array(2);
 			for (int i = 0; i < 2; i++)
-				array[i] = (byte)(num >> (i * 8));
+				array[i] = (VMByte)(num >> (i * 8));
 			return array;
 		}
 
-		std::vector<byte> Helper::int32_to_bytes(int32_t num)
+		std::vector<VMByte> Helper::int32_to_bytes(int32_t num)
 		{
 			// little endian
-			std::vector<byte> array(4);
+			std::vector<VMByte> array(4);
 			for (int i = 0; i < 4; i++)
-				array[i] = (byte)(num >> (i * 8));
+				array[i] = (VMByte)(num >> (i * 8));
 			return array;
 		}
 
+		std::string Helper::quote_string(std::string source)
+		{
+			if (source.empty())
+				return "\"\"";
+			std::stringstream ss;
+			ss << "\"";
+			for (size_t i = 0; i < source.size(); i++)
+			{
+				auto c = source[i];
+				switch (c)
+				{
+				case '"':
+				case '\\':
+					ss << "\\" << c;
+				 break;
+				case '\b':
+					ss << "\\b";
+					break;
+				case '\t':
+					ss << "\\t";
+					break;
+				case '\n':
+					ss << "\\n";
+					break;
+				case '\f':
+					ss << "\\f";
+					break;
+				case '\r':
+					ss << "\\r";
+					break;
+				default:
+				{
+					ss << c;
+				}
+				}
+			}
+			ss << "\"";
+			return ss.str();
+		}
 
 	}
 }

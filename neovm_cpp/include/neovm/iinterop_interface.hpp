@@ -32,9 +32,9 @@ namespace neo
 
 			virtual bool Equals(StackItem *other);
 
-			virtual  bool GetBoolean();
+			virtual  bool GetBoolean() const;
 
-			virtual std::vector<char> GetByteArray();
+			virtual std::vector<char> GetByteArray() const;
 
 		};
 

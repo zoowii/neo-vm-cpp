@@ -18,9 +18,9 @@ namespace neo
 
 		}
 
-		ScriptBuilder* ScriptBuilder::emit(OpCode op, std::vector<byte> arg)
+		ScriptBuilder* ScriptBuilder::emit(OpCode op, std::vector<VMByte> arg)
 		{
-			_ms.push_back((byte)op);
+			_ms.push_back((VMByte)op);
 			if (arg.size() > 0)
 			{
 				for (const auto b : arg)
@@ -35,27 +35,27 @@ namespace neo
 		{
 			if (script_id.size() < 1)
 				throw NeoVmException("argument exception");
-			return emit(useTailCall ? OpCode::TAILCALL : OpCode::APPCALL, Helper::chars_to_bytes(script_id));
+			return emit(useTailCall ? OpCode::OP_TAILCALL : OpCode::OP_APPCALL, Helper::chars_to_bytes(script_id));
 		}
 
 		ScriptBuilder* ScriptBuilder::emit_jump(OpCode op, int16_t offset)
 		{
-			if (op != OpCode::JMP && op != OpCode::JMPIF && op != OpCode::JMPIFNOT && op != OpCode::CALL)
+			if (op != OpCode::OP_JMP && op != OpCode::OP_JMPIF && op != OpCode::OP_JMPIFNOT && op != OpCode::OP_CALL)
 				throw NeoVmException("argument exception");
 			return emit(op, Helper::int16_to_bytes(offset));
 		}
 
 		ScriptBuilder* ScriptBuilder::emit_push(VMBigInteger number)
 		{
-			if (number == -1) return emit(OpCode::PUSHM1);
-			if (number == 0) return emit(OpCode::PUSH0);
-			if (number > 0 && number <= 16) return emit((OpCode)(OpCode::PUSH1 - 1 + (byte)number));
+			if (number == -1) return emit(OpCode::OP_PUSHM1);
+			if (number == 0) return emit(OpCode::OP_PUSH0);
+			if (number > 0 && number <= 16) return emit((OpCode)(OpCode::OP_PUSH1 - 1 + (VMByte)number));
 			return emit_push(Helper::big_integer_to_bytes(number));
 		}
 
 		ScriptBuilder* ScriptBuilder::emit_push(bool data)
 		{
-			return emit(data ? OpCode::PUSHT : OpCode::PUSHF);
+			return emit(data ? OpCode::OP_PUSHT : OpCode::OP_PUSHF);
 		}
 
 		ScriptBuilder* ScriptBuilder::emit_push(const char *str)
@@ -65,16 +65,16 @@ namespace neo
 
 		ScriptBuilder* ScriptBuilder::emit_push_string(std::string str)
 		{
-			std::vector<byte> data(str.size());
+			std::vector<VMByte> data(str.size());
 			memcpy(data.data(), str.c_str(), sizeof(char) * str.size());
 			return emit_push(data);
 		}
 
-		ScriptBuilder* ScriptBuilder::emit_push(std::vector<byte> data)
+		ScriptBuilder* ScriptBuilder::emit_push(std::vector<VMByte> data)
 		{
-			if (data.size() <= (int)OpCode::PUSHBYTES75)
+			if (data.size() <= (int)OpCode::OP_PUSHBYTES75)
 			{
-				_ms.push_back((byte)data.size());
+				_ms.push_back((VMByte)data.size());
 				for (const auto b : data)
 				{
 					_ms.push_back(b);
@@ -82,8 +82,8 @@ namespace neo
 			}
 			else if (data.size() < 0x100)
 			{
-				emit(OpCode::PUSHDATA1);
-				_ms.push_back((byte)data.size());
+				emit(OpCode::OP_PUSHDATA1);
+				_ms.push_back((VMByte)data.size());
 				for (const auto b : data)
 				{
 					_ms.push_back(b);
@@ -91,7 +91,7 @@ namespace neo
 			}
 			else if (data.size() < 0x10000)
 			{
-				emit(OpCode::PUSHDATA2);
+				emit(OpCode::OP_PUSHDATA2);
 				auto int16_data_size_bytes = Helper::int16_to_bytes((uint16_t)data.size());
 				for (const auto b : int16_data_size_bytes)
 				{
@@ -104,7 +104,7 @@ namespace neo
 			}
 			else// if (data.Length < 0x100000000L)
 			{
-				emit(OpCode::PUSHDATA4);
+				emit(OpCode::OP_PUSHDATA4);
 				auto data_size_bytes = Helper::int32_to_bytes((uint32_t)data.size());
 				for (const auto b : data_size_bytes)
 				{
@@ -125,10 +125,10 @@ namespace neo
 			auto api_bytes = Helper::string_to_bytes(api);
 			if (api_bytes.empty() || api_bytes.size() > 252)
 				throw NeoVmException("argument exception");
-			return emit(OpCode::SYSCALL, api_bytes);
+			return emit(OpCode::OP_SYSCALL, api_bytes);
 		}
 
-		std::vector<byte> ScriptBuilder::to_array()
+		std::vector<VMByte> ScriptBuilder::to_array()
 		{
 			return _ms;
 		}
@@ -136,7 +136,7 @@ namespace neo
 		std::vector<char> ScriptBuilder::to_char_array()
 		{
 			std::vector<char> result(_ms.size());
-			memcpy(result.data(), _ms.data(), _ms.size() * sizeof(byte));
+			memcpy(result.data(), _ms.data(), _ms.size() * sizeof(VMByte));
 			return result;
 		}
 	}

@@ -157,7 +157,7 @@ namespace neo
 		{
 			if (_invocation_stack.size() == 0) _state = (VMState)(_state | VMState::HALT);
 			if (Helper::enum_has_flag(_state, VMState::HALT) || Helper::enum_has_flag(_state, VMState::FAULT)) return;
-			OpCode opcode = current_context()->get_instruction_pointer() >= current_context()->script()->size() ? OpCode::RET : (OpCode)((byte)current_context()->op_reader()->ReadByte());
+			OpCode opcode = current_context()->get_instruction_pointer() >= current_context()->script()->size() ? OpCode::OP_RET : (OpCode)((VMByte)current_context()->op_reader()->ReadByte());
 			try
 			{
 				ExecuteOp(opcode, current_context());
@@ -283,7 +283,7 @@ namespace neo
 
 		void ExecutionEngine::ExecuteOp(OpCode opcode, ExecutionContext *context)
 		{
-			if (opcode > OpCode::PUSH16 && opcode != OpCode::RET && context->push_only())
+			if (opcode > OpCode::OP_PUSH16 && opcode != OpCode::OP_RET && context->push_only())
 			{
 				_state = (VMState) (_state | VMState::FAULT);
 				return;
@@ -298,51 +298,51 @@ namespace neo
 			}
 			++_gas_used;
 
-			if (opcode >= OpCode::PUSHBYTES1 && opcode <= OpCode::PUSHBYTES75)
+			if (opcode >= OpCode::OP_PUSHBYTES1 && opcode <= OpCode::OP_PUSHBYTES75)
 				_evaluation_stack.push(StackItem::to_stack_item(this, context->op_reader()->ReadBytes((char)opcode)));
 			else
 			{ 
 				switch (opcode)
 				{
 					// Push value
-				case OpCode::PUSH0:
+				case OpCode::OP_PUSH0:
 					_evaluation_stack.push(StackItem::to_stack_item(this, std::vector<char>()));
 					break;
-				case OpCode::PUSHDATA1:
+				case OpCode::OP_PUSHDATA1:
 					_evaluation_stack.push(StackItem::to_stack_item(this, context->op_reader()->ReadBytes(context->op_reader()->ReadByte())));
 					break;
-				case OpCode::PUSHDATA2:
+				case OpCode::OP_PUSHDATA2:
 					_evaluation_stack.push(StackItem::to_stack_item(this, context->op_reader()->ReadBytes(context->op_reader()->ReadUInt16())));
 					break;
-				case OpCode::PUSHDATA4:
+				case OpCode::OP_PUSHDATA4:
 					_evaluation_stack.push(StackItem::to_stack_item(this, context->op_reader()->ReadBytes(context->op_reader()->ReadInt32())));
 					break;
-				case OpCode::PUSHM1:
-				case OpCode::PUSH1:
-				case OpCode::PUSH2:
-				case OpCode::PUSH3:
-				case OpCode::PUSH4:
-				case OpCode::PUSH5:
-				case OpCode::PUSH6:
-				case OpCode::PUSH7:
-				case OpCode::PUSH8:
-				case OpCode::PUSH9:
-				case OpCode::PUSH10:
-				case OpCode::PUSH11:
-				case OpCode::PUSH12:
-				case OpCode::PUSH13:
-				case OpCode::PUSH14:
-				case OpCode::PUSH15:
-				case OpCode::PUSH16:
-					_evaluation_stack.push(StackItem::to_stack_item(this, (int)opcode - (int)OpCode::PUSH1 + 1));
+				case OpCode::OP_PUSHM1:
+				case OpCode::OP_PUSH1:
+				case OpCode::OP_PUSH2:
+				case OpCode::OP_PUSH3:
+				case OpCode::OP_PUSH4:
+				case OpCode::OP_PUSH5:
+				case OpCode::OP_PUSH6:
+				case OpCode::OP_PUSH7:
+				case OpCode::OP_PUSH8:
+				case OpCode::OP_PUSH9:
+				case OpCode::OP_PUSH10:
+				case OpCode::OP_PUSH11:
+				case OpCode::OP_PUSH12:
+				case OpCode::OP_PUSH13:
+				case OpCode::OP_PUSH14:
+				case OpCode::OP_PUSH15:
+				case OpCode::OP_PUSH16:
+					_evaluation_stack.push(StackItem::to_stack_item(this, (int)opcode - (int)OpCode::OP_PUSH1 + 1));
 					break;
 
 					// Control
-				case OpCode::NOP:
+				case OpCode::OP_NOP:
 					break;
-				case OpCode::JMP:
-				case OpCode::JMPIF:
-				case OpCode::JMPIFNOT:
+				case OpCode::OP_JMP:
+				case OpCode::OP_JMPIF:
+				case OpCode::OP_JMPIFNOT:
 				{
 					int offset = context->op_reader()->ReadInt16();
 					offset = context->get_instruction_pointer() + offset - 3;
@@ -352,10 +352,10 @@ namespace neo
 						return;
 					}
 					bool fValue = true;
-					if (opcode > OpCode::JMP)
+					if (opcode > OpCode::OP_JMP)
 					{
 						fValue = _evaluation_stack.pop()->GetBoolean();
-						if (opcode == OpCode::JMPIFNOT)
+						if (opcode == OpCode::OP_JMPIFNOT)
 							fValue = !fValue;
 					}
 					if (fValue)
@@ -363,12 +363,12 @@ namespace neo
 				}
 				break;
 
-				case OpCode::CALL:
+				case OpCode::OP_CALL:
 					_invocation_stack.push(context->clone());
 					context->set_instruction_pointer(context->get_instruction_pointer() + 2);
-					ExecuteOp(OpCode::JMP, current_context());
+					ExecuteOp(OpCode::OP_JMP, current_context());
 					break;
-				case OpCode::RET:
+				case OpCode::OP_RET:
 				{
 					if (_invocation_stack.size() < 1)
 					{
@@ -379,8 +379,8 @@ namespace neo
 						union_change_state(VMState::HALT);
 				}
 					break;
-				case OpCode::APPCALL:
-				case OpCode::TAILCALL:
+				case OpCode::OP_APPCALL:
+				case OpCode::OP_TAILCALL:
 				{
 					if (_table == nullptr)
 					{
@@ -403,12 +403,12 @@ namespace neo
 						union_change_state(VMState::FAULT);
 						return;
 					}
-					if (opcode == OpCode::TAILCALL)
+					if (opcode == OpCode::OP_TAILCALL)
 						delete _invocation_stack.pop();
 					load_script(script, Helper::string_content_to_chars(script_id));
 				}
 				break;
-				case OpCode::SYSCALL:
+				case OpCode::OP_SYSCALL:
 				{
 					auto bytes = Helper::ReadVarBytes(context->op_reader(), 252);
 					auto func_name = Helper::bytes_to_string(bytes);
@@ -428,16 +428,16 @@ namespace neo
 				}
 
 					// Stack ops
-				case OpCode::DUPFROMALTSTACK:
+				case OpCode::OP_DUPFROMALTSTACK:
 					_evaluation_stack.push_back(Helper::peek(_alt_stack));
 					break;
-				case OpCode::TOALTSTACK:
+				case OpCode::OP_TOALTSTACK:
 					_alt_stack.push_back(_evaluation_stack.pop());
 					break;
-				case OpCode::FROMALTSTACK:
+				case OpCode::OP_FROMALTSTACK:
 					_evaluation_stack.push(Helper::pop(_alt_stack));
 					break;
-				case OpCode::XDROP:
+				case OpCode::OP_XDROP:
 				{
 					int n = (int)(_evaluation_stack.pop()->GetBigInteger());
 					if (n < 0)
@@ -448,7 +448,7 @@ namespace neo
 					_evaluation_stack.remove(n);
 				}
 				break;
-				case OpCode::XSWAP:
+				case OpCode::OP_XSWAP:
 				{
 					int n = (int)_evaluation_stack.pop()->GetBigInteger();
 					if (n < 0)
@@ -462,7 +462,7 @@ namespace neo
 					_evaluation_stack.set(0, xn);
 				}
 				break;
-				case OpCode::XTUCK:
+				case OpCode::OP_XTUCK:
 				{
 					int n = (int)_evaluation_stack.pop()->GetBigInteger();
 					if (n <= 0)
@@ -473,23 +473,23 @@ namespace neo
 					_evaluation_stack.insert(n, _evaluation_stack.peek());
 				}
 				break;
-				case OpCode::DEPTH:
+				case OpCode::OP_DEPTH:
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, _evaluation_stack.size()));
 					break;
-				case OpCode::DROP:
+				case OpCode::OP_DROP:
 					_evaluation_stack.pop();
 					break;
-				case OpCode::DUP:
+				case OpCode::OP_DUP:
 					_evaluation_stack.push_back(_evaluation_stack.peek());
 					break;
-				case OpCode::NIP:
+				case OpCode::OP_NIP:
 				{
 					auto x2 = _evaluation_stack.pop();
 					_evaluation_stack.pop();
 					_evaluation_stack.push_back(x2);
 				}
 				break;
-				case OpCode::OVER:
+				case OpCode::OP_OVER:
 				{
 					auto x2 = _evaluation_stack.pop();
 					auto x1 = _evaluation_stack.peek();
@@ -497,7 +497,7 @@ namespace neo
 					_evaluation_stack.push_back(x1);
 				}
 				break;
-				case OpCode::PICK:
+				case OpCode::OP_PICK:
 				{
 					int n = (int)_evaluation_stack.pop()->GetBigInteger();
 					if (n < 0)
@@ -508,7 +508,7 @@ namespace neo
 					_evaluation_stack.push(_evaluation_stack.peek(n));
 				}
 				break;
-				case OpCode::ROLL:
+				case OpCode::OP_ROLL:
 				{
 					int n = (int)_evaluation_stack.pop()->GetBigInteger();
 					if (n < 0)
@@ -520,7 +520,7 @@ namespace neo
 					_evaluation_stack.push_back(_evaluation_stack.remove(n));
 				}
 				break;
-				case OpCode::ROT:
+				case OpCode::OP_ROT:
 				{
 					auto x3 =_evaluation_stack.pop();
 					auto x2 = _evaluation_stack.pop();
@@ -530,7 +530,7 @@ namespace neo
 					_evaluation_stack.push_back(x1);
 				}
 				break;
-				case OpCode::SWAP:
+				case OpCode::OP_SWAP:
 				{
 					auto x2 = _evaluation_stack.pop();
 					auto x1 = _evaluation_stack.pop();
@@ -538,7 +538,7 @@ namespace neo
 					_evaluation_stack.push_back(x1);
 				}
 				break;
-				case OpCode::TUCK:
+				case OpCode::OP_TUCK:
 				{
 					auto x2 = _evaluation_stack.pop();
 					auto x1 = _evaluation_stack.pop();
@@ -547,14 +547,14 @@ namespace neo
 					_evaluation_stack.push_back(x2);
 				}
 				break;
-				case OpCode::CAT:
+				case OpCode::OP_CAT:
 				{
 					auto x2 = _evaluation_stack.pop()->GetByteArray();
 					auto x1 = _evaluation_stack.pop()->GetByteArray();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, Helper::concat_vector(x1, x2)));
 				}
 				break;
-				case OpCode::SUBSTR:
+				case OpCode::OP_SUBSTR:
 				{
 					int count = (int)_evaluation_stack.pop()->GetBigInteger();
 					if (count < 0)
@@ -574,7 +574,7 @@ namespace neo
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, result));
 				}
 				break;
-				case OpCode::LEFT:
+				case OpCode::OP_LEFT:
 				{
 					int count = (int)_evaluation_stack.pop()->GetBigInteger();
 					if (count < 0)
@@ -588,7 +588,7 @@ namespace neo
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, result));
 				}
 				break;
-				case OpCode::RIGHT:
+				case OpCode::OP_RIGHT:
 				{
 					int count = (int)_evaluation_stack.pop()->GetBigInteger();
 					if (count < 0)
@@ -607,7 +607,7 @@ namespace neo
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, result));
 				}
 				break;
-				case OpCode::SIZE:
+				case OpCode::OP_SIZE:
 				{
 					auto x = _evaluation_stack.pop()->GetByteArray();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x.size()));
@@ -615,7 +615,7 @@ namespace neo
 				break;
 
 				// Bitwise logic
-				case OpCode::INVERT:
+				case OpCode::OP_INVERT:
 				{
 					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, ~x));
@@ -642,7 +642,7 @@ namespace neo
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 ^ x2));
 				}
 				break;
-				case OpCode::EQUAL:
+				case OpCode::OP_EQUAL:
 				{
 					auto x2 = _evaluation_stack.pop();
 					auto x1 = _evaluation_stack.pop();
@@ -651,32 +651,32 @@ namespace neo
 				break;
 
 				// Numeric
-				case OpCode::INC:
+				case OpCode::OP_INC:
 				{
 					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x + 1));
 				}
 				break;
-				case OpCode::DEC:
+				case OpCode::OP_DEC:
 				{
 					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x - 1));
 				}
 				break;
-				case OpCode::SIGN:
+				case OpCode::OP_SIGN:
 				{
 					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					// FIXME: ¸Ä³É _evaluation_stack.push_back(x.Sign);
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x));
 				}
 				break;
-				case OpCode::NEGATE:
+				case OpCode::OP_NEGATE:
 				{
 					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, -x));
 				}
 				break;
-				case OpCode::ABS:
+				case OpCode::OP_ABS:
 				{
 					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, std::abs(x)));
@@ -688,132 +688,132 @@ namespace neo
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, !x));
 				}
 				break;
-				case OpCode::NZ:
+				case OpCode::OP_NZ:
 				{
 					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x != 0));
 				}
 				break;
-				case OpCode::ADD:
+				case OpCode::OP_ADD:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 + x2));
 				}
 				break;
-				case OpCode::SUB:
+				case OpCode::OP_SUB:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 - x2));
 				}
 				break;
-				case OpCode::MUL:
+				case OpCode::OP_MUL:
 				{
 					VMBigInteger x2 =_evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 * x2));
 				}
 				break;
-				case OpCode::DIV:
+				case OpCode::OP_DIV:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 / x2));
 				}
 				break;
-				case OpCode::MOD:
+				case OpCode::OP_MOD:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 % x2));
 				}
 				break;
-				case OpCode::SHL:
+				case OpCode::OP_SHL:
 				{
 					int n = (int)_evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x << n));
 				}
 				break;
-				case OpCode::SHR:
+				case OpCode::OP_SHR:
 				{
 					int n = (int)_evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x >> n));
 				}
 				break;
-				case OpCode::BOOLAND:
+				case OpCode::OP_BOOLAND:
 				{
 					bool x2 = _evaluation_stack.pop()->GetBoolean();
 					bool x1 = _evaluation_stack.pop()->GetBoolean();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 && x2));
 				}
 				break;
-				case OpCode::BOOLOR:
+				case OpCode::OP_BOOLOR:
 				{
 					bool x2 = _evaluation_stack.pop()->GetBoolean();
 					bool x1 = _evaluation_stack.pop()->GetBoolean();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 || x2));
 				}
 				break;
-				case OpCode::NUMEQUAL:
+				case OpCode::OP_NUMEQUAL:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 == x2));
 				}
 				break;
-				case OpCode::NUMNOTEQUAL:
+				case OpCode::OP_NUMNOTEQUAL:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 != x2));
 				}
 				break;
-				case OpCode::LT:
+				case OpCode::OP_LT:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 < x2));
 				}
 				break;
-				case OpCode::GT:
+				case OpCode::OP_GT:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 > x2));
 				}
 				break;
-				case OpCode::LTE:
+				case OpCode::OP_LTE:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 <= x2));
 				}
 				break;
-				case OpCode::GTE:
+				case OpCode::OP_GTE:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item_from_bool(this, x1 >= x2));
 				}
 				break;
-				case OpCode::MIN:
+				case OpCode::OP_MIN:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 < x2 ? x1 : x2));
 				}
 				break;
-				case OpCode::MAX:
+				case OpCode::OP_MAX:
 				{
 					VMBigInteger x2 = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger x1 = _evaluation_stack.pop()->GetBigInteger();
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, x1 < x2 ? x2 : x1));
 				}
 				break;
-				case OpCode::WITHIN:
+				case OpCode::OP_WITHIN:
 				{
 					VMBigInteger b = _evaluation_stack.pop()->GetBigInteger();
 					VMBigInteger a = _evaluation_stack.pop()->GetBigInteger();
@@ -907,7 +907,7 @@ namespace neo
 				*/
 
 				// Array
-				case OpCode::ARRAYSIZE:
+				case OpCode::OP_ARRAYSIZE:
 				{
 					auto item = _evaluation_stack.pop();
 					if (!item->IsArray())
@@ -916,7 +916,7 @@ namespace neo
 						_evaluation_stack.push_back(StackItem::to_stack_item(this, item->GetArray()->size()));
 				}
 				break;
-				case OpCode::PACK:
+				case OpCode::OP_PACK:
 				{
 					int size = (int)_evaluation_stack.pop()->GetBigInteger();
 					if (size < 0 || size > _evaluation_stack.size())
@@ -930,7 +930,7 @@ namespace neo
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, items));
 				}
 				break;
-				case OpCode::UNPACK:
+				case OpCode::OP_UNPACK:
 				{
 					auto item = _evaluation_stack.pop();
 					if (!item->IsArray())
@@ -944,7 +944,7 @@ namespace neo
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, items->size()));
 				}
 				break;
-				case OpCode::PICKITEM:
+				case OpCode::OP_PICKITEM:
 				{
 					int index = (int)_evaluation_stack.pop()->GetBigInteger();
 					if (index < 0)
@@ -967,7 +967,7 @@ namespace neo
 					_evaluation_stack.push_back((*items)[index]);
 				}
 				break;
-				case OpCode::SETITEM:
+				case OpCode::OP_SETITEM:
 				{
 					auto newItem = _evaluation_stack.pop();
 					if (newItem->IsStruct())
@@ -990,7 +990,7 @@ namespace neo
 					(*items)[index] = newItem;
 				}
 				break;
-				case OpCode::NEWARRAY:
+				case OpCode::OP_NEWARRAY:
 				{
 					int count = (int)_evaluation_stack.pop()->GetBigInteger();
 					std::vector<StackItem*> items(count);
@@ -1001,7 +1001,7 @@ namespace neo
 					_evaluation_stack.push_back(StackItem::to_stack_item(this, items));
 				}
 				break;
-				case OpCode::NEWSTRUCT:
+				case OpCode::OP_NEWSTRUCT:
 				{
 					int count = (int)_evaluation_stack.pop()->GetBigInteger();
 					std::vector<StackItem*> items(count);
@@ -1013,12 +1013,12 @@ namespace neo
 				}
 				break;
 				// Exceptions
-				case OpCode::THROW:
+				case OpCode::OP_THROW:
 				{
 					union_change_state(VMState::FAULT);
 					return;
 				}
-				case OpCode::THROWIFNOT:
+				case OpCode::OP_THROWIFNOT:
 				{
 					if (!_evaluation_stack.pop()->GetBoolean())
 					{
@@ -1029,8 +1029,11 @@ namespace neo
 					break;
 
 				default:
+				{
 					union_change_state(VMState::FAULT);
+					throw NeoVmException(std::string("unknown instruction op ") + op_code_to_str(opcode), ErrorCode::UNKNOWN_INSTRUCTION_OP);
 					return;
+				}
 				}
 			}
 			if (!Helper::enum_has_flag(_state, VMState::FAULT) && _invocation_stack.size() > 0)

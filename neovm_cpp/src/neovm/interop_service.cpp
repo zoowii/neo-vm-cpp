@@ -19,11 +19,17 @@ namespace neo
 
 			register_service("System.ExecutionEngine.SetGlobal", SetGlobalVariable);
 			register_service("System.ExecutionEngine.GetGlobal", GetGlobalVariable);
+
 		}
 
 		void InteropService::register_service(std::string method, std::function<bool(ExecutionEngine*)> handler)
 		{
 			_dictionary[method] = handler;
+		}
+
+		void InteropService::clear_services()
+		{
+			_dictionary.clear();
 		}
 
 		bool InteropService::invoke(std::string method, ExecutionEngine *engine)
@@ -94,9 +100,9 @@ namespace neo
 			}
 			else
 			{
-				// push nil value
-				// TODO
-				auto nil_value = 0; // FIXME
+				// push false value as nil value
+				auto value = StackItem::to_stack_item_from_bool(engine, false);
+				engine->evaluation_stack()->push(value);
 			}
 			return true;
 		}

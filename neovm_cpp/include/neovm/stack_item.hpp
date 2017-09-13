@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <set>
 #include <memory>
 #include <neovm/config.hpp>
 #include <neovm/exceptions.hpp>
@@ -21,8 +22,9 @@ namespace neo
 			SIT_BYTE_ARRAY = 2,
 			SIT_ARRAY = 3,
 			SIT_STRUCT = 4,
+			SIT_MAP = 5,
 
-			SIT_USERDATA = 5,
+			SIT_USERDATA = 8,
 
 			SIT_INTEROP_INTERFACE = 10
 		};
@@ -36,6 +38,7 @@ namespace neo
 			inline virtual bool IsArray() const { return false; }
 			inline virtual bool IsStruct() const { return false; }
 			inline virtual bool IsUserdata() const { return false; }
+			inline virtual bool is_map() const { return false; }
 
 			virtual bool Equals(StackItem *other) = 0;
 
@@ -44,21 +47,21 @@ namespace neo
 				throw NeoVmException("not supported operation");
 			}
 
-			inline virtual StackItemType type()
+			inline virtual StackItemType type() const
 			{
 				return _type;
 			}
 
-			virtual VMBigInteger GetBigInteger();
+			virtual VMBigInteger GetBigInteger() const;
 
-			virtual bool GetBoolean();
+			virtual bool GetBoolean() const;
 
-			virtual std::vector<char> GetByteArray() = 0;
+			virtual std::vector<char> GetByteArray() const = 0;
 
-			virtual std::string GetString();
+			virtual std::string GetString() const;
 
-			
-			// where T : class, IInteropInterface
+			virtual std::string to_json_string(std::set<void*> referenced_objects) const;
+
 			virtual IInteropInterface *GetInterface();
 			
 

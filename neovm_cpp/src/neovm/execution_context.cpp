@@ -51,7 +51,7 @@ namespace neo
 
 		OpCode ExecutionContext::next_instruction() 
 		{ 
-			return (OpCode)((byte)_script[_op_reader->position()]); 
+			return (OpCode)((VMByte)_script[_op_reader->position()]);
 		}
 
 		ExecutionContext* ExecutionContext::clone()

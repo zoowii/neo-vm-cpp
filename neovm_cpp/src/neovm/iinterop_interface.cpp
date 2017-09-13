@@ -21,12 +21,12 @@ namespace neo
 			return _object->Equals((StackItem*)(i->_object));
 		}
 
-		bool InteropInterface::GetBoolean()
+		bool InteropInterface::GetBoolean() const
 		{
 			return _object != nullptr;
 		}
 
-		std::vector<char> InteropInterface::GetByteArray()
+		std::vector<char> InteropInterface::GetByteArray() const
 		{
 			throw NeoVmException("not supported operation");
 		}

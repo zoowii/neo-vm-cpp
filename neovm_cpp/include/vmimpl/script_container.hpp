@@ -16,8 +16,8 @@ namespace neo
 				inline virtual std::vector<char> get_message()
 				{
 					std::vector<char> data;
-					data.push_back(OpCode::PUSH0);
-					data.push_back(OpCode::PUSH1);
+					data.push_back(OpCode::OP_PUSH0);
+					data.push_back(OpCode::OP_PUSH1);
 					
 					// FIXME: 用生成的demo字节码填充
 

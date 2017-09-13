@@ -7,9 +7,9 @@ namespace neo
 {
 	namespace vm
 	{
-		VMBigInteger StackItem::GetBigInteger()
+		VMBigInteger StackItem::GetBigInteger() const
 		{
-			// big endien
+			// big endian
 			auto bytes = GetByteArray();
 			if (bytes.size() > 8)
 			{
@@ -18,12 +18,12 @@ namespace neo
 			VMBigInteger value = 0;
 			for (size_t i = 0; i < bytes.size(); i++)
 			{
-				value += (byte)(bytes[i]) << (8 * (bytes.size() - i - 1));
+				value += (VMByte)(bytes[i]) << (8 * (bytes.size() - i - 1));
 			}
 			return value;
 		}
 
-		bool StackItem::GetBoolean()
+		bool StackItem::GetBoolean() const
 		{
 			const auto &data = GetByteArray();
 			if (data.size() < 1)
@@ -36,9 +36,14 @@ namespace neo
 			return false;
 		}
 
-		std::string StackItem::GetString()
+		std::string StackItem::GetString() const
 		{
 			return Helper::bytes_to_string(GetByteArray());
+		}
+
+		std::string StackItem::to_json_string(std::set<void*> referenced_objects) const
+		{
+			return GetString();
 		}
 
 		IInteropInterface* StackItem::GetInterface()

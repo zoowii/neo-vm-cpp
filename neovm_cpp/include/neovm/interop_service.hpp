@@ -23,6 +23,8 @@ namespace neo
 
 			void register_service(std::string method, std::function<bool(ExecutionEngine*)> handler);
 
+			void clear_services();
+
 			bool invoke(std::string method, ExecutionEngine *engine);
 
 		private:
