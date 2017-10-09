@@ -13,6 +13,10 @@ namespace neo
 
 		// to_json_string时最多支持引用的对象数量
 #define JSON_MAX_REFERENCE_OBJECT_COUNT 10240
+
+		// invocation最大深度
+#define NEOVM_MAX_INVOCATION_DEPTH 1024
+
 	}
 }
 

@@ -20,6 +20,7 @@ namespace neo
 			register_service("System.ExecutionEngine.SetGlobal", SetGlobalVariable);
 			register_service("System.ExecutionEngine.GetGlobal", GetGlobalVariable);
 
+			// TODO: json_loads service
 		}
 
 		void InteropService::register_service(std::string method, std::function<bool(ExecutionEngine*)> handler)

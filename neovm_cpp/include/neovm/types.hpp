@@ -17,6 +17,7 @@ namespace neo
 			std::vector<StackItem*> _array;
 
 		public:
+			inline virtual ~Array() {}
 			inline virtual bool IsArray() const { return true; }
 
 			Array(ExecutionEngine *engine, std::vector<StackItem*> value);
@@ -43,6 +44,7 @@ namespace neo
 		protected:
 			std::vector<std::pair<StackItem*, StackItem*>> _items;
 		public:
+			inline virtual ~Map() {}
 			inline virtual bool is_map() const { return true; }
 			
 			Map(ExecutionEngine *engine, std::vector<std::pair<StackItem*, StackItem*>> items);
@@ -76,6 +78,7 @@ namespace neo
 
 		public:
 			Boolean(ExecutionEngine *engine, bool value);
+			inline virtual ~Boolean() {}
 
 			virtual bool Equals(StackItem *other);
 
@@ -97,6 +100,7 @@ namespace neo
 
 		public:
 			ByteArray(ExecutionEngine *engine, std::vector<char> value);
+			inline virtual ~ByteArray() {}
 
 			virtual bool Equals(StackItem *other);
 
@@ -114,6 +118,7 @@ namespace neo
 
 		public:
 			Integer(ExecutionEngine *engine, VMBigInteger value);
+			inline virtual ~Integer() {}
 
 			virtual bool Equals(StackItem *other);
 
@@ -134,6 +139,7 @@ namespace neo
 			inline virtual bool IsStruct() { return true; }
 
 			Struct(ExecutionEngine *engine, std::vector<StackItem*> value);
+			inline virtual ~Struct() {}
 
 			virtual StackItem *Clone(ExecutionEngine *engine);
 
@@ -150,6 +156,7 @@ namespace neo
 			void *_value;
 		public:
 			Userdata(ExecutionEngine *engine, void *value);
+			inline virtual ~Userdata() {}
 
 			virtual bool Equals(StackItem *other);
 

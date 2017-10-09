@@ -34,7 +34,7 @@ namespace neo
 		protected:
 			StackItemType _type;
 		public:
-
+			inline virtual ~StackItem() {}
 			inline virtual bool IsArray() const { return false; }
 			inline virtual bool IsStruct() const { return false; }
 			inline virtual bool IsUserdata() const { return false; }

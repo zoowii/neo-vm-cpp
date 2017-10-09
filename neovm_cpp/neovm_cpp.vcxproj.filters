@@ -92,9 +92,6 @@
     <ClCompile Include="src\neovm\interop_service.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\runner\main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\neovm\execution_context.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

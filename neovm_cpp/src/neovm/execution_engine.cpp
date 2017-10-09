@@ -141,6 +141,10 @@ namespace neo
 		void ExecutionEngine::load_script(std::vector<char> script, std::vector<char> script_id, bool push_only = false)
 		{
 			_invocation_stack.push(new ExecutionContext(this, script, script_id, push_only, std::set<uint64_t>()));
+			if (_invocation_stack.size() > NEOVM_MAX_INVOCATION_DEPTH)
+			{
+				throw NeoVmException("invocation over limit");
+			}
 		}
 
 		bool ExecutionEngine::remove_break_point(uint64_t position)

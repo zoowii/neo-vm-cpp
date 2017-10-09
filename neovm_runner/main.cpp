@@ -154,11 +154,11 @@ int main(int argc, char **argv)
 
 
 		int mode = 1;
-		
+
 		// load args script
 
 		std::vector<StackItem*> script_args;
-	
+
 		std::vector<StackItem*> second_arg_content;
 		second_arg_content.push_back(StackItem::to_stack_item(engine.get(), string_to_bytes("demoAddress")));
 		auto second_arg = StackItem::to_stack_item(engine.get(), second_arg_content); // 第二个参数 args
@@ -181,6 +181,5 @@ int main(int argc, char **argv)
 			std::cerr << "error: " << e.what() << std::endl;
 		}
 	}
-	
 	return 0;
 }

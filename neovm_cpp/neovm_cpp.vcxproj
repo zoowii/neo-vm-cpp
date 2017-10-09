@@ -21,7 +21,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -135,13 +135,14 @@
     <ClCompile Include="src\neovm\execution_context.cpp" />
     <ClCompile Include="src\neovm\execution_engine.cpp" />
     <ClCompile Include="src\neovm\helper.cpp" />
-    <ClCompile Include="src\neovm\iinterop_interface.cpp" />
+    <ClCompile Include="src\neovm\iinterop_interface.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="src\neovm\interop_service.cpp" />
     <ClCompile Include="src\neovm\op_code.cpp" />
     <ClCompile Include="src\neovm\script_builder.cpp" />
     <ClCompile Include="src\neovm\stack_item.cpp" />
     <ClCompile Include="src\neovm\types.cpp" />
-    <ClCompile Include="src\runner\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
